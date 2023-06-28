@@ -1,0 +1,21 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "factoryName": {
+            "value": "seminariolladf"
+        },
+        "linkedservicebdlocal_connectionString": {
+            "value": ""
+        },
+        "linkedserviceadls_accountKey": {
+            "value": ""
+        },
+        "AzureSqlDatabase1_connectionString": {
+            "value": ""
+        },
+        "linkedserviceadls_properties_typeProperties_url": {
+            "value": "https://seminariolladls.dfs.core.windows.net/"
+        }
+    }
+}

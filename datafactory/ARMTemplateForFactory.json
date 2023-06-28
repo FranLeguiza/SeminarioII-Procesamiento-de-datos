@@ -1,0 +1,1947 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "factoryName": {
+            "type": "string",
+            "metadata": "Data Factory name",
+            "defaultValue": "seminariolladf"
+        },
+        "linkedservicebdlocal_connectionString": {
+            "type": "secureString",
+            "metadata": "Secure string for 'connectionString' of 'linkedservicebdlocal'"
+        },
+        "linkedserviceadls_accountKey": {
+            "type": "secureString",
+            "metadata": "Secure string for 'accountKey' of 'linkedserviceadls'"
+        },
+        "AzureSqlDatabase1_connectionString": {
+            "type": "secureString",
+            "metadata": "Secure string for 'connectionString' of 'AzureSqlDatabase1'"
+        },
+        "linkedserviceadls_properties_typeProperties_url": {
+            "type": "string",
+            "defaultValue": "https://seminariolladls.dfs.core.windows.net/"
+        }
+    },
+    "variables": {
+        "factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+    },
+    "resources": [
+        {
+            "name": "[concat(parameters('factoryName'), '/IngestBronze')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "activities": [
+                    {
+                        "name": "ForEach_ylo",
+                        "type": "ForEach",
+                        "dependsOn": [],
+                        "userProperties": [],
+                        "typeProperties": {
+                            "items": {
+                                "value": "@pipeline().parameters.cw_items",
+                                "type": "Expression"
+                            },
+                            "activities": [
+                                {
+                                    "name": "Copy_ylo",
+                                    "type": "Copy",
+                                    "dependsOn": [],
+                                    "policy": {
+                                        "timeout": "0.12:00:00",
+                                        "retry": 0,
+                                        "retryIntervalInSeconds": 30,
+                                        "secureOutput": false,
+                                        "secureInput": false
+                                    },
+                                    "userProperties": [
+                                        {
+                                            "name": "Source",
+                                            "value": "SalesLT.@{item().source.table}"
+                                        },
+                                        {
+                                            "name": "Destination",
+                                            "value": "bronze//@{item().destination.fileName}"
+                                        }
+                                    ],
+                                    "typeProperties": {
+                                        "source": {
+                                            "type": "SqlServerSource",
+                                            "partitionOption": "None"
+                                        },
+                                        "sink": {
+                                            "type": "DelimitedTextSink",
+                                            "storeSettings": {
+                                                "type": "AzureBlobFSWriteSettings"
+                                            },
+                                            "formatSettings": {
+                                                "type": "DelimitedTextWriteSettings",
+                                                "quoteAllText": true,
+                                                "fileExtension": ".txt"
+                                            }
+                                        },
+                                        "enableStaging": false,
+                                        "validateDataConsistency": false,
+                                        "translator": {
+                                            "type": "TabularTranslator",
+                                            "typeConversion": true,
+                                            "typeConversionSettings": {
+                                                "allowDataTruncation": true,
+                                                "treatBooleanAsNumber": false
+                                            }
+                                        }
+                                    },
+                                    "inputs": [
+                                        {
+                                            "referenceName": "SourceDataset_ylo",
+                                            "type": "DatasetReference",
+                                            "parameters": {
+                                                "cw_table": "@item().source.table"
+                                            }
+                                        }
+                                    ],
+                                    "outputs": [
+                                        {
+                                            "referenceName": "DestinationDataset_ylo",
+                                            "type": "DatasetReference",
+                                            "parameters": {
+                                                "cw_fileName": "@item().destination.fileName"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "policy": {
+                    "elapsedTimeMetric": {},
+                    "cancelAfter": {}
+                },
+                "parameters": {
+                    "cw_items": {
+                        "type": "Array",
+                        "defaultValue": [
+                            {
+                                "source": {
+                                    "table": "Address"
+                                },
+                                "destination": {
+                                    "fileName": "SalesLTAddress"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "table": "Customer"
+                                },
+                                "destination": {
+                                    "fileName": "SalesLTCustomer"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "table": "CustomerAddress"
+                                },
+                                "destination": {
+                                    "fileName": "SalesLTCustomerAddress"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "table": "Product"
+                                },
+                                "destination": {
+                                    "fileName": "SalesLTProduct"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "table": "ProductCategory"
+                                },
+                                "destination": {
+                                    "fileName": "SalesLTProductCategory"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "table": "ProductDescription"
+                                },
+                                "destination": {
+                                    "fileName": "SalesLTProductDescription"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "table": "ProductModel"
+                                },
+                                "destination": {
+                                    "fileName": "SalesLTProductModel"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "table": "ProductModelProductDescription"
+                                },
+                                "destination": {
+                                    "fileName": "SalesLTProductModelProductDescription"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "table": "SalesOrderDetail"
+                                },
+                                "destination": {
+                                    "fileName": "SalesLTSalesOrderDetail"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "table": "SalesOrderHeader"
+                                },
+                                "destination": {
+                                    "fileName": "SalesLTSalesOrderHeader"
+                                }
+                            }
+                        ]
+                    }
+                },
+                "annotations": [],
+                "lastPublishTime": "2023-06-05T18:02:40Z"
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/datasets/SourceDataset_ylo')]",
+                "[concat(variables('factoryId'), '/datasets/DestinationDataset_ylo')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/LoadStarDim')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "activities": [
+                    {
+                        "name": "Carga dim",
+                        "type": "ExecuteDataFlow",
+                        "dependsOn": [],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "dataflow": {
+                                "referenceName": "ModelStarDim",
+                                "type": "DataFlowReference",
+                                "parameters": {},
+                                "datasetParameters": {
+                                    "Address": {},
+                                    "Customer": {},
+                                    "CustomerAddress": {},
+                                    "Product": {},
+                                    "ProductCategory": {},
+                                    "ProductDescription": {},
+                                    "ProductModel": {},
+                                    "ProductModelDescription": {},
+                                    "OrderDetail": {},
+                                    "OrderHeader": {},
+                                    "DimCustomer": {},
+                                    "DimAddress": {},
+                                    "DimCustomerAddress": {},
+                                    "DimProduct": {},
+                                    "DimOrder": {}
+                                }
+                            },
+                            "staging": {},
+                            "compute": {
+                                "coreCount": 8,
+                                "computeType": "General"
+                            },
+                            "traceLevel": "Fine"
+                        }
+                    }
+                ],
+                "policy": {
+                    "elapsedTimeMetric": {},
+                    "cancelAfter": {}
+                },
+                "annotations": [],
+                "lastPublishTime": "2023-06-04T03:53:23Z"
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/dataflows/ModelStarDim')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/LoadStarFact')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "activities": [
+                    {
+                        "name": "Cargar Fact",
+                        "type": "ExecuteDataFlow",
+                        "dependsOn": [],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "dataflow": {
+                                "referenceName": "ModelStarFact",
+                                "type": "DataFlowReference",
+                                "parameters": {},
+                                "datasetParameters": {
+                                    "dimProduct": {},
+                                    "dimOrder": {},
+                                    "dimCustomer": {},
+                                    "dimAddress": {},
+                                    "FactSales": {}
+                                }
+                            },
+                            "staging": {},
+                            "compute": {
+                                "coreCount": 8,
+                                "computeType": "General"
+                            },
+                            "traceLevel": "Fine"
+                        }
+                    }
+                ],
+                "policy": {
+                    "elapsedTimeMetric": {},
+                    "cancelAfter": {}
+                },
+                "annotations": [],
+                "lastPublishTime": "2023-06-04T05:51:26Z"
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/dataflows/ModelStarFact')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/LoadDatawarehouse')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "activities": [
+                    {
+                        "name": "Cargar Dimensiones",
+                        "type": "ExecuteDataFlow",
+                        "dependsOn": [],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "dataflow": {
+                                "referenceName": "DatawarehouseDim",
+                                "type": "DataFlowReference",
+                                "parameters": {},
+                                "datasetParameters": {
+                                    "Customer": {},
+                                    "Product": {},
+                                    "Address": {},
+                                    "Order": {},
+                                    "dbCustomer": {},
+                                    "dbProduct": {},
+                                    "dbAddress": {},
+                                    "dbOrder": {}
+                                }
+                            },
+                            "staging": {},
+                            "compute": {
+                                "coreCount": 8,
+                                "computeType": "General"
+                            },
+                            "traceLevel": "Fine"
+                        }
+                    },
+                    {
+                        "name": "Cargar fact",
+                        "type": "Copy",
+                        "dependsOn": [
+                            {
+                                "activity": "Cargar Dimensiones",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "source": {
+                                "type": "DelimitedTextSource",
+                                "storeSettings": {
+                                    "type": "AzureBlobFSReadSettings",
+                                    "recursive": true,
+                                    "enablePartitionDiscovery": false
+                                },
+                                "formatSettings": {
+                                    "type": "DelimitedTextReadSettings"
+                                }
+                            },
+                            "sink": {
+                                "type": "AzureSqlSink",
+                                "writeBehavior": "insert",
+                                "sqlWriterUseTableLock": false
+                            },
+                            "enableStaging": false,
+                            "translator": {
+                                "type": "TabularTranslator",
+                                "mappings": [
+                                    {
+                                        "source": {
+                                            "name": "ProductID",
+                                            "type": "String",
+                                            "physicalType": "String"
+                                        },
+                                        "sink": {
+                                            "name": "ProductID",
+                                            "type": "Int32",
+                                            "physicalType": "int"
+                                        }
+                                    },
+                                    {
+                                        "source": {
+                                            "name": "CustomerID",
+                                            "type": "String",
+                                            "physicalType": "String"
+                                        },
+                                        "sink": {
+                                            "name": "CustomerID",
+                                            "type": "Int32",
+                                            "physicalType": "int"
+                                        }
+                                    },
+                                    {
+                                        "source": {
+                                            "name": "AddressID",
+                                            "type": "String",
+                                            "physicalType": "String"
+                                        },
+                                        "sink": {
+                                            "name": "AddressID",
+                                            "type": "Int32",
+                                            "physicalType": "int"
+                                        }
+                                    },
+                                    {
+                                        "source": {
+                                            "name": "SalesOrderID",
+                                            "type": "String",
+                                            "physicalType": "String"
+                                        },
+                                        "sink": {
+                                            "name": "OrderSalesID",
+                                            "type": "Int32",
+                                            "physicalType": "int"
+                                        }
+                                    },
+                                    {
+                                        "source": {
+                                            "name": "SalesOrderDetailID",
+                                            "type": "String",
+                                            "physicalType": "String"
+                                        },
+                                        "sink": {
+                                            "name": "OrderDetailID",
+                                            "type": "Int32",
+                                            "physicalType": "int"
+                                        }
+                                    }
+                                ],
+                                "typeConversion": true,
+                                "typeConversionSettings": {
+                                    "allowDataTruncation": true,
+                                    "treatBooleanAsNumber": false
+                                }
+                            }
+                        },
+                        "inputs": [
+                            {
+                                "referenceName": "DelimitedText1",
+                                "type": "DatasetReference",
+                                "parameters": {}
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "referenceName": "factDB",
+                                "type": "DatasetReference",
+                                "parameters": {}
+                            }
+                        ]
+                    }
+                ],
+                "policy": {
+                    "elapsedTimeMetric": {},
+                    "cancelAfter": {}
+                },
+                "annotations": [],
+                "lastPublishTime": "2023-06-04T07:10:25Z"
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/dataflows/DatawarehouseDim')]",
+                "[concat(variables('factoryId'), '/datasets/DelimitedText1')]",
+                "[concat(variables('factoryId'), '/datasets/factDB')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/pipeline1')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "activities": [
+                    {
+                        "name": "Data flow1",
+                        "type": "ExecuteDataFlow",
+                        "dependsOn": [],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "dataflow": {
+                                "referenceName": "dataflow1",
+                                "type": "DataFlowReference",
+                                "parameters": {},
+                                "datasetParameters": {
+                                    "source1": {},
+                                    "sink1": {}
+                                }
+                            },
+                            "staging": {},
+                            "compute": {
+                                "coreCount": 8,
+                                "computeType": "General"
+                            },
+                            "traceLevel": "Fine"
+                        }
+                    }
+                ],
+                "policy": {
+                    "elapsedTimeMetric": {},
+                    "cancelAfter": {}
+                },
+                "annotations": [],
+                "lastPublishTime": "2023-06-04T07:44:14Z"
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/dataflows/dataflow1')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/DestinationDataset_ylo')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "linkedserviceadls",
+                    "type": "LinkedServiceReference"
+                },
+                "parameters": {
+                    "cw_fileName": {
+                        "type": "String"
+                    }
+                },
+                "annotations": [],
+                "type": "DelimitedText",
+                "typeProperties": {
+                    "location": {
+                        "type": "AzureBlobFSLocation",
+                        "fileName": {
+                            "value": "@dataset().cw_fileName",
+                            "type": "Expression"
+                        },
+                        "fileSystem": "bronze"
+                    },
+                    "columnDelimiter": ",",
+                    "escapeChar": "\\",
+                    "firstRowAsHeader": true,
+                    "quoteChar": "\""
+                },
+                "schema": []
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/linkedserviceadls')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/SourceDataset_ylo')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "linkedservicebdlocal",
+                    "type": "LinkedServiceReference"
+                },
+                "parameters": {
+                    "cw_table": {
+                        "type": "String"
+                    }
+                },
+                "annotations": [],
+                "type": "SqlServerTable",
+                "schema": [],
+                "typeProperties": {
+                    "schema": "SalesLT",
+                    "table": {
+                        "value": "@dataset().cw_table",
+                        "type": "Expression"
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/linkedservicebdlocal')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/DelimitedText1')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "linkedserviceadls",
+                    "type": "LinkedServiceReference"
+                },
+                "annotations": [],
+                "type": "DelimitedText",
+                "typeProperties": {
+                    "location": {
+                        "type": "AzureBlobFSLocation",
+                        "fileName": "FactSales",
+                        "fileSystem": "silver"
+                    },
+                    "columnDelimiter": ",",
+                    "escapeChar": "\\",
+                    "firstRowAsHeader": true,
+                    "quoteChar": "\""
+                },
+                "schema": [
+                    {
+                        "name": "SalesOrderID",
+                        "type": "String"
+                    },
+                    {
+                        "name": "SalesOrderDetailID",
+                        "type": "String"
+                    },
+                    {
+                        "name": "CustomerID",
+                        "type": "String"
+                    },
+                    {
+                        "name": "AddressID",
+                        "type": "String"
+                    },
+                    {
+                        "name": "ProductID",
+                        "type": "String"
+                    }
+                ]
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/linkedserviceadls')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/factDB')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "AzureSqlDatabase1",
+                    "type": "LinkedServiceReference"
+                },
+                "annotations": [],
+                "type": "AzureSqlTable",
+                "schema": [
+                    {
+                        "name": "OrderSalesID",
+                        "type": "int",
+                        "precision": 10
+                    },
+                    {
+                        "name": "OrderDetailID",
+                        "type": "int",
+                        "precision": 10
+                    },
+                    {
+                        "name": "ProductID",
+                        "type": "int",
+                        "precision": 10
+                    },
+                    {
+                        "name": "CustomerID",
+                        "type": "int",
+                        "precision": 10
+                    },
+                    {
+                        "name": "AddressID",
+                        "type": "int",
+                        "precision": 10
+                    }
+                ],
+                "typeProperties": {
+                    "schema": "dbo",
+                    "table": "FactSales"
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/integrationlocal')]",
+            "type": "Microsoft.DataFactory/factories/integrationRuntimes",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "type": "SelfHosted",
+                "typeProperties": {}
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/linkedservicebdlocal')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "SqlServer",
+                "typeProperties": {
+                    "connectionString": "[parameters('linkedservicebdlocal_connectionString')]"
+                },
+                "connectVia": {
+                    "referenceName": "integrationlocal",
+                    "type": "IntegrationRuntimeReference"
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/integrationRuntimes/integrationlocal')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/linkedserviceadls')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureBlobFS",
+                "typeProperties": {
+                    "url": "[parameters('linkedserviceadls_properties_typeProperties_url')]",
+                    "accountKey": {
+                        "type": "SecureString",
+                        "value": "[parameters('linkedserviceadls_accountKey')]"
+                    }
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/AzureSqlDatabase1')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureSqlDatabase",
+                "typeProperties": {
+                    "connectionString": "[parameters('AzureSqlDatabase1_connectionString')]"
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/ModelStarDim')]",
+            "type": "Microsoft.DataFactory/factories/dataflows",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "type": "MappingDataFlow",
+                "typeProperties": {
+                    "sources": [
+                        {
+                            "linkedService": {
+                                "referenceName": "linkedserviceadls",
+                                "type": "LinkedServiceReference"
+                            },
+                            "name": "Address"
+                        },
+                        {
+                            "linkedService": {
+                                "referenceName": "linkedserviceadls",
+                                "type": "LinkedServiceReference"
+                            },
+                            "name": "Customer"
+                        },
+                        {
+                            "linkedService": {
+                                "referenceName": "linkedserviceadls",
+                                "type": "LinkedServiceReference"
+                            },
+                            "name": "CustomerAddress"
+                        },
+                        {
+                            "linkedService": {
+                                "referenceName": "linkedserviceadls",
+                                "type": "LinkedServiceReference"
+                            },
+                            "name": "Product"
+                        },
+                        {
+                            "linkedService": {
+                                "referenceName": "linkedserviceadls",
+                                "type": "LinkedServiceReference"
+                            },
+                            "name": "ProductCategory"
+                        },
+                        {
+                            "linkedService": {
+                                "referenceName": "linkedserviceadls",
+                                "type": "LinkedServiceReference"
+                            },
+                            "name": "ProductDescription"
+                        },
+                        {
+                            "linkedService": {
+                                "referenceName": "linkedserviceadls",
+                                "type": "LinkedServiceReference"
+                            },
+                            "name": "ProductModel"
+                        },
+                        {
+                            "linkedService": {
+                                "referenceName": "linkedserviceadls",
+                                "type": "LinkedServiceReference"
+                            },
+                            "name": "ProductModelDescription"
+                        },
+                        {
+                            "linkedService": {
+                                "referenceName": "linkedserviceadls",
+                                "type": "LinkedServiceReference"
+                            },
+                            "name": "OrderDetail"
+                        },
+                        {
+                            "linkedService": {
+                                "referenceName": "linkedserviceadls",
+                                "type": "LinkedServiceReference"
+                            },
+                            "name": "OrderHeader"
+                        }
+                    ],
+                    "sinks": [
+                        {
+                            "linkedService": {
+                                "referenceName": "linkedserviceadls",
+                                "type": "LinkedServiceReference"
+                            },
+                            "name": "DimCustomer"
+                        },
+                        {
+                            "linkedService": {
+                                "referenceName": "linkedserviceadls",
+                                "type": "LinkedServiceReference"
+                            },
+                            "name": "DimAddress"
+                        },
+                        {
+                            "linkedService": {
+                                "referenceName": "linkedserviceadls",
+                                "type": "LinkedServiceReference"
+                            },
+                            "name": "DimCustomerAddress"
+                        },
+                        {
+                            "linkedService": {
+                                "referenceName": "linkedserviceadls",
+                                "type": "LinkedServiceReference"
+                            },
+                            "name": "DimProduct"
+                        },
+                        {
+                            "linkedService": {
+                                "referenceName": "linkedserviceadls",
+                                "type": "LinkedServiceReference"
+                            },
+                            "name": "DimOrder"
+                        }
+                    ],
+                    "transformations": [
+                        {
+                            "name": "selectCustomer"
+                        },
+                        {
+                            "name": "filterCustomer"
+                        },
+                        {
+                            "name": "selectAddress"
+                        },
+                        {
+                            "name": "filterAddress"
+                        },
+                        {
+                            "name": "selectCustomerAddress"
+                        },
+                        {
+                            "name": "selectProduct"
+                        },
+                        {
+                            "name": "selectProductCategory"
+                        },
+                        {
+                            "name": "selectProductDescription"
+                        },
+                        {
+                            "name": "selectProductModel"
+                        },
+                        {
+                            "name": "joinProductCategory"
+                        },
+                        {
+                            "name": "joinPCModel"
+                        },
+                        {
+                            "name": "selectProductModelDescription"
+                        },
+                        {
+                            "name": "joinPCMDescription"
+                        },
+                        {
+                            "name": "joinDescription"
+                        },
+                        {
+                            "name": "select1"
+                        },
+                        {
+                            "name": "joinOrder"
+                        },
+                        {
+                            "name": "selectHeaderDetail"
+                        },
+                        {
+                            "name": "window1"
+                        },
+                        {
+                            "name": "window2"
+                        }
+                    ],
+                    "scriptLines": [
+                        "source(output(",
+                        "          AddressID as short,",
+                        "          AddressLine1 as string,",
+                        "          AddressLine2 as string,",
+                        "          City as string,",
+                        "          StateProvince as string,",
+                        "          CountryRegion as string,",
+                        "          PostalCode as string,",
+                        "          rowguid as string,",
+                        "          ModifiedDate as string",
+                        "     ),",
+                        "     useSchema: false,",
+                        "     allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     ignoreNoFilesFound: false,",
+                        "     format: 'delimited',",
+                        "     fileSystem: 'bronze',",
+                        "     fileName: 'SalesLTAddress',",
+                        "     columnDelimiter: ',',",
+                        "     escapeChar: '\\\\',",
+                        "     quoteChar: '\\\"',",
+                        "     columnNamesAsHeader: true) ~> Address",
+                        "source(output(",
+                        "          CustomerID as short,",
+                        "          NameStyle as boolean,",
+                        "          Title as string,",
+                        "          FirstName as string,",
+                        "          MiddleName as string,",
+                        "          LastName as string,",
+                        "          Suffix as string,",
+                        "          CompanyName as string,",
+                        "          SalesPerson as string,",
+                        "          EmailAddress as string,",
+                        "          Phone as string,",
+                        "          PasswordHash as string,",
+                        "          PasswordSalt as string,",
+                        "          rowguid as string,",
+                        "          ModifiedDate as string",
+                        "     ),",
+                        "     useSchema: false,",
+                        "     allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     ignoreNoFilesFound: false,",
+                        "     format: 'delimited',",
+                        "     fileSystem: 'bronze',",
+                        "     fileName: 'SalesLTCustomer',",
+                        "     columnDelimiter: ',',",
+                        "     escapeChar: '\\\\',",
+                        "     quoteChar: '\\\"',",
+                        "     columnNamesAsHeader: true) ~> Customer",
+                        "source(output(",
+                        "          CustomerID as short,",
+                        "          AddressID as short,",
+                        "          AddressType as string,",
+                        "          rowguid as string,",
+                        "          ModifiedDate as string",
+                        "     ),",
+                        "     useSchema: false,",
+                        "     allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     ignoreNoFilesFound: false,",
+                        "     format: 'delimited',",
+                        "     fileSystem: 'bronze',",
+                        "     fileName: 'SalesLTCustomerAddress',",
+                        "     columnDelimiter: ',',",
+                        "     escapeChar: '\\\\',",
+                        "     quoteChar: '\\\"',",
+                        "     columnNamesAsHeader: true) ~> CustomerAddress",
+                        "source(output(",
+                        "          ProductID as short,",
+                        "          Name as string,",
+                        "          ProductNumber as string,",
+                        "          Color as string,",
+                        "          StandardCost as double,",
+                        "          ListPrice as double,",
+                        "          Size as string,",
+                        "          Weight as double,",
+                        "          ProductCategoryID as short,",
+                        "          ProductModelID as short,",
+                        "          SellStartDate as string,",
+                        "          SellEndDate as string,",
+                        "          DiscontinuedDate as string,",
+                        "          ThumbNailPhoto as string,",
+                        "          ThumbnailPhotoFileName as string,",
+                        "          rowguid as string,",
+                        "          ModifiedDate as string",
+                        "     ),",
+                        "     useSchema: false,",
+                        "     allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     ignoreNoFilesFound: false,",
+                        "     format: 'delimited',",
+                        "     fileSystem: 'bronze',",
+                        "     fileName: 'SalesLTProduct',",
+                        "     columnDelimiter: ',',",
+                        "     escapeChar: '\\\\',",
+                        "     quoteChar: '\\\"',",
+                        "     columnNamesAsHeader: true) ~> Product",
+                        "source(output(",
+                        "          ProductCategoryID as short,",
+                        "          ParentProductCategoryID as short,",
+                        "          Name as string,",
+                        "          rowguid as string,",
+                        "          ModifiedDate as string",
+                        "     ),",
+                        "     useSchema: false,",
+                        "     allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     ignoreNoFilesFound: false,",
+                        "     format: 'delimited',",
+                        "     fileSystem: 'bronze',",
+                        "     fileName: 'SalesLTProductCategory',",
+                        "     columnDelimiter: ',',",
+                        "     escapeChar: '\\\\',",
+                        "     quoteChar: '\\\"',",
+                        "     columnNamesAsHeader: true) ~> ProductCategory",
+                        "source(output(",
+                        "          ProductDescriptionID as short,",
+                        "          Description as string,",
+                        "          rowguid as string,",
+                        "          ModifiedDate as string",
+                        "     ),",
+                        "     useSchema: false,",
+                        "     allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     ignoreNoFilesFound: false,",
+                        "     format: 'delimited',",
+                        "     fileSystem: 'bronze',",
+                        "     fileName: 'SalesLTProductDescription',",
+                        "     columnDelimiter: ',',",
+                        "     escapeChar: '\\\\',",
+                        "     quoteChar: '\\\"',",
+                        "     columnNamesAsHeader: true) ~> ProductDescription",
+                        "source(output(",
+                        "          ProductModelID as integer,",
+                        "          Name as string,",
+                        "          CatalogDescription as string,",
+                        "          rowguid as string,",
+                        "          ModifiedDate as string",
+                        "     ),",
+                        "     useSchema: false,",
+                        "     allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     ignoreNoFilesFound: false,",
+                        "     format: 'delimited',",
+                        "     fileSystem: 'bronze',",
+                        "     fileName: 'SalesLTProductModel',",
+                        "     columnDelimiter: ',',",
+                        "     escapeChar: '\\\\',",
+                        "     quoteChar: '\\\"',",
+                        "     columnNamesAsHeader: true) ~> ProductModel",
+                        "source(output(",
+                        "          ProductModelID as short,",
+                        "          ProductDescriptionID as short,",
+                        "          Culture as string,",
+                        "          rowguid as string,",
+                        "          ModifiedDate as string",
+                        "     ),",
+                        "     useSchema: false,",
+                        "     allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     ignoreNoFilesFound: false,",
+                        "     format: 'delimited',",
+                        "     fileSystem: 'bronze',",
+                        "     fileName: 'SalesLTProductModelProductDescription',",
+                        "     columnDelimiter: ',',",
+                        "     escapeChar: '\\\\',",
+                        "     quoteChar: '\\\"',",
+                        "     columnNamesAsHeader: true) ~> ProductModelDescription",
+                        "source(output(",
+                        "          SalesOrderID as integer,",
+                        "          SalesOrderDetailID as integer,",
+                        "          OrderQty as short,",
+                        "          ProductID as short,",
+                        "          UnitPrice as double,",
+                        "          UnitPriceDiscount as double,",
+                        "          LineTotal as double,",
+                        "          rowguid as string,",
+                        "          ModifiedDate as string",
+                        "     ),",
+                        "     useSchema: false,",
+                        "     allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     ignoreNoFilesFound: false,",
+                        "     format: 'delimited',",
+                        "     fileSystem: 'bronze',",
+                        "     fileName: 'SalesLTSalesOrderDetail',",
+                        "     columnDelimiter: ',',",
+                        "     escapeChar: '\\\\',",
+                        "     quoteChar: '\\\"',",
+                        "     columnNamesAsHeader: true) ~> OrderDetail",
+                        "source(output(",
+                        "          SalesOrderID as integer,",
+                        "          RevisionNumber as short,",
+                        "          OrderDate as string,",
+                        "          DueDate as string,",
+                        "          ShipDate as string,",
+                        "          Status as short,",
+                        "          OnlineOrderFlag as boolean,",
+                        "          SalesOrderNumber as string,",
+                        "          PurchaseOrderNumber as string,",
+                        "          AccountNumber as string,",
+                        "          CustomerID as short,",
+                        "          ShipToAddressID as short,",
+                        "          BillToAddressID as short,",
+                        "          ShipMethod as string,",
+                        "          CreditCardApprovalCode as string,",
+                        "          SubTotal as double,",
+                        "          TaxAmt as double,",
+                        "          Freight as double,",
+                        "          TotalDue as double,",
+                        "          Comment as string,",
+                        "          rowguid as string,",
+                        "          ModifiedDate as string",
+                        "     ),",
+                        "     useSchema: false,",
+                        "     allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     ignoreNoFilesFound: false,",
+                        "     format: 'delimited',",
+                        "     fileSystem: 'bronze',",
+                        "     fileName: 'SalesLTSalesOrderHeader',",
+                        "     columnDelimiter: ',',",
+                        "     escapeChar: '\\\\',",
+                        "     quoteChar: '\\\"',",
+                        "     columnNamesAsHeader: true) ~> OrderHeader",
+                        "Customer select(mapColumn(",
+                        "          CustomerID,",
+                        "          FirstName,",
+                        "          MiddleName,",
+                        "          LastName,",
+                        "          CompanyName,",
+                        "          EmailAddress,",
+                        "          Phone",
+                        "     ),",
+                        "     skipDuplicateMapInputs: true,",
+                        "     skipDuplicateMapOutputs: true) ~> selectCustomer",
+                        "selectCustomer filter(!(isNull(CustomerID) && isNull(FirstName))) ~> filterCustomer",
+                        "Address select(mapColumn(",
+                        "          AddressID,",
+                        "          AddressLine1,",
+                        "          AddressLine2,",
+                        "          City,",
+                        "          StateProvince,",
+                        "          CountryRegion,",
+                        "          PostalCode",
+                        "     ),",
+                        "     skipDuplicateMapInputs: true,",
+                        "     skipDuplicateMapOutputs: true) ~> selectAddress",
+                        "selectAddress filter(!(isNull(AddressID) && isNull(AddressLine1))) ~> filterAddress",
+                        "CustomerAddress select(mapColumn(",
+                        "          CustomerID,",
+                        "          AddressID",
+                        "     ),",
+                        "     skipDuplicateMapInputs: true,",
+                        "     skipDuplicateMapOutputs: true) ~> selectCustomerAddress",
+                        "Product select(mapColumn(",
+                        "          ProductID,",
+                        "          Name,",
+                        "          ProductNumber,",
+                        "          Color,",
+                        "          StandardCost,",
+                        "          ListPrice,",
+                        "          Size,",
+                        "          Weight,",
+                        "          ProductCategoryID,",
+                        "          ProductModelID",
+                        "     ),",
+                        "     skipDuplicateMapInputs: true,",
+                        "     skipDuplicateMapOutputs: true) ~> selectProduct",
+                        "ProductCategory select(mapColumn(",
+                        "          ProductCategoryID,",
+                        "          ParentProductCategoryID,",
+                        "          Name",
+                        "     ),",
+                        "     skipDuplicateMapInputs: true,",
+                        "     skipDuplicateMapOutputs: true) ~> selectProductCategory",
+                        "ProductDescription select(mapColumn(",
+                        "          ProductDescriptionID,",
+                        "          Description",
+                        "     ),",
+                        "     skipDuplicateMapInputs: true,",
+                        "     skipDuplicateMapOutputs: true) ~> selectProductDescription",
+                        "ProductModel select(mapColumn(",
+                        "          ProductModelID,",
+                        "          Name",
+                        "     ),",
+                        "     skipDuplicateMapInputs: true,",
+                        "     skipDuplicateMapOutputs: true) ~> selectProductModel",
+                        "selectProduct, selectProductCategory join(selectProduct@ProductCategoryID == selectProductCategory@ProductCategoryID,",
+                        "     joinType:'inner',",
+                        "     matchType:'exact',",
+                        "     ignoreSpaces: false,",
+                        "     broadcast: 'auto')~> joinProductCategory",
+                        "joinProductCategory, selectProductModel join(selectProduct@ProductModelID == selectProductModel@ProductModelID,",
+                        "     joinType:'inner',",
+                        "     matchType:'exact',",
+                        "     ignoreSpaces: false,",
+                        "     broadcast: 'auto')~> joinPCModel",
+                        "ProductModelDescription select(mapColumn(",
+                        "          ProductModelID,",
+                        "          ProductDescriptionID",
+                        "     ),",
+                        "     skipDuplicateMapInputs: true,",
+                        "     skipDuplicateMapOutputs: true) ~> selectProductModelDescription",
+                        "joinPCModel, ProductModelDescription join(selectProduct@ProductModelID == ProductModelDescription@ProductModelID,",
+                        "     joinType:'left',",
+                        "     matchType:'exact',",
+                        "     ignoreSpaces: false,",
+                        "     broadcast: 'auto')~> joinPCMDescription",
+                        "joinPCMDescription, ProductDescription join(ProductModelDescription@ProductModelID == ProductDescription@ProductDescriptionID,",
+                        "     joinType:'inner',",
+                        "     matchType:'exact',",
+                        "     ignoreSpaces: false,",
+                        "     broadcast: 'auto')~> joinDescription",
+                        "joinDescription select(mapColumn(",
+                        "          ProductID,",
+                        "          Name = selectProduct@Name,",
+                        "          ProductNumber,",
+                        "          Color,",
+                        "          StandardCost,",
+                        "          ListPrice,",
+                        "          Size,",
+                        "          Weight,",
+                        "          Category = selectProductCategory@Name,",
+                        "          Model = selectProductModel@Name,",
+                        "          Description",
+                        "     ),",
+                        "     skipDuplicateMapInputs: true,",
+                        "     skipDuplicateMapOutputs: true) ~> select1",
+                        "OrderDetail, OrderHeader join(OrderDetail@SalesOrderID == OrderHeader@SalesOrderID,",
+                        "     joinType:'inner',",
+                        "     matchType:'exact',",
+                        "     ignoreSpaces: false,",
+                        "     broadcast: 'auto')~> joinOrder",
+                        "joinOrder select(mapColumn(",
+                        "          SalesOrderID = OrderDetail@SalesOrderID,",
+                        "          SalesOrderDetailID,",
+                        "          OrderQty,",
+                        "          ProductID,",
+                        "          UnitPrice,",
+                        "          UnitPriceDiscount,",
+                        "          LineTotal,",
+                        "          Status,",
+                        "          AccountNumber,",
+                        "          CustomerID,",
+                        "          ShipMethod,",
+                        "          SubTotal,",
+                        "          TaxAmt,",
+                        "          Freight,",
+                        "          TotalDue",
+                        "     ),",
+                        "     skipDuplicateMapInputs: true,",
+                        "     skipDuplicateMapOutputs: true) ~> selectHeaderDetail",
+                        "select1 window(asc(ProductID, true),",
+                        "     ID = rowNumber()) ~> window1",
+                        "selectHeaderDetail window(asc(SalesOrderID, true),",
+                        "     orderID = rowNumber()) ~> window2",
+                        "filterCustomer sink(allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     format: 'delimited',",
+                        "     fileSystem: 'silver',",
+                        "     columnDelimiter: ',',",
+                        "     escapeChar: '\\\\',",
+                        "     quoteChar: '\\\"',",
+                        "     columnNamesAsHeader: true,",
+                        "     partitionFileNames:['DimCustomer'],",
+                        "     umask: 0022,",
+                        "     preCommands: [],",
+                        "     postCommands: [],",
+                        "     skipDuplicateMapInputs: true,",
+                        "     skipDuplicateMapOutputs: true,",
+                        "     partitionBy('hash', 1)) ~> DimCustomer",
+                        "filterAddress sink(allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     format: 'delimited',",
+                        "     fileSystem: 'silver',",
+                        "     columnDelimiter: ',',",
+                        "     escapeChar: '\\\\',",
+                        "     quoteChar: '\\\"',",
+                        "     columnNamesAsHeader: true,",
+                        "     partitionFileNames:['DimAddress'],",
+                        "     umask: 0022,",
+                        "     preCommands: [],",
+                        "     postCommands: [],",
+                        "     skipDuplicateMapInputs: true,",
+                        "     skipDuplicateMapOutputs: true,",
+                        "     mapColumn(",
+                        "          AddressID,",
+                        "          AddressLine1,",
+                        "          AddressLine2,",
+                        "          City,",
+                        "          StateProvince,",
+                        "          CountryRegion,",
+                        "          PostalCode",
+                        "     ),",
+                        "     partitionBy('hash', 1)) ~> DimAddress",
+                        "selectCustomerAddress sink(allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     format: 'delimited',",
+                        "     fileSystem: 'silver',",
+                        "     columnDelimiter: ',',",
+                        "     escapeChar: '\\\\',",
+                        "     quoteChar: '\\\"',",
+                        "     columnNamesAsHeader: true,",
+                        "     partitionFileNames:['CustomerAddress'],",
+                        "     umask: 0022,",
+                        "     preCommands: [],",
+                        "     postCommands: [],",
+                        "     skipDuplicateMapInputs: true,",
+                        "     skipDuplicateMapOutputs: true,",
+                        "     partitionBy('hash', 1)) ~> DimCustomerAddress",
+                        "window1 sink(allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     format: 'delimited',",
+                        "     fileSystem: 'silver',",
+                        "     columnDelimiter: ',',",
+                        "     escapeChar: '\\\\',",
+                        "     quoteChar: '\\\"',",
+                        "     columnNamesAsHeader: true,",
+                        "     partitionFileNames:['DimProduct'],",
+                        "     umask: 0022,",
+                        "     preCommands: [],",
+                        "     postCommands: [],",
+                        "     skipDuplicateMapInputs: true,",
+                        "     skipDuplicateMapOutputs: true,",
+                        "     mapColumn(",
+                        "          ProductID,",
+                        "          Name,",
+                        "          ProductNumber,",
+                        "          Color,",
+                        "          StandardCost,",
+                        "          ListPrice,",
+                        "          Size,",
+                        "          Weight,",
+                        "          Category,",
+                        "          Model,",
+                        "          Description,",
+                        "          ID",
+                        "     ),",
+                        "     partitionBy('hash', 1)) ~> DimProduct",
+                        "window2 sink(allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     format: 'delimited',",
+                        "     fileSystem: 'silver',",
+                        "     columnDelimiter: ',',",
+                        "     escapeChar: '\\\\',",
+                        "     quoteChar: '\\\"',",
+                        "     columnNamesAsHeader: true,",
+                        "     partitionFileNames:['DimOrder'],",
+                        "     umask: 0022,",
+                        "     preCommands: [],",
+                        "     postCommands: [],",
+                        "     skipDuplicateMapInputs: true,",
+                        "     skipDuplicateMapOutputs: true,",
+                        "     mapColumn(",
+                        "          SalesOrderID,",
+                        "          SalesOrderDetailID,",
+                        "          OrderQty,",
+                        "          ProductID,",
+                        "          UnitPrice,",
+                        "          UnitPriceDiscount,",
+                        "          LineTotal,",
+                        "          Status,",
+                        "          AccountNumber,",
+                        "          CustomerID,",
+                        "          ShipMethod,",
+                        "          SubTotal,",
+                        "          TaxAmt,",
+                        "          Freight,",
+                        "          TotalDue,",
+                        "          orderID",
+                        "     ),",
+                        "     partitionBy('hash', 1)) ~> DimOrder"
+                    ]
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/linkedserviceadls')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/ModelStarFact')]",
+            "type": "Microsoft.DataFactory/factories/dataflows",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "type": "MappingDataFlow",
+                "typeProperties": {
+                    "sources": [
+                        {
+                            "linkedService": {
+                                "referenceName": "linkedserviceadls",
+                                "type": "LinkedServiceReference"
+                            },
+                            "name": "dimProduct"
+                        },
+                        {
+                            "linkedService": {
+                                "referenceName": "linkedserviceadls",
+                                "type": "LinkedServiceReference"
+                            },
+                            "name": "dimOrder"
+                        },
+                        {
+                            "linkedService": {
+                                "referenceName": "linkedserviceadls",
+                                "type": "LinkedServiceReference"
+                            },
+                            "name": "dimCustomer"
+                        },
+                        {
+                            "linkedService": {
+                                "referenceName": "linkedserviceadls",
+                                "type": "LinkedServiceReference"
+                            },
+                            "name": "dimAddress"
+                        }
+                    ],
+                    "sinks": [
+                        {
+                            "linkedService": {
+                                "referenceName": "linkedserviceadls",
+                                "type": "LinkedServiceReference"
+                            },
+                            "name": "FactSales"
+                        }
+                    ],
+                    "transformations": [
+                        {
+                            "name": "joinOrderProduct"
+                        },
+                        {
+                            "name": "joinFinal"
+                        },
+                        {
+                            "name": "joinAddressCustomer"
+                        },
+                        {
+                            "name": "selectFinal"
+                        }
+                    ],
+                    "scriptLines": [
+                        "source(output(",
+                        "          ProductID as short,",
+                        "          Name as string,",
+                        "          ProductNumber as string,",
+                        "          Color as string,",
+                        "          StandardCost as double,",
+                        "          ListPrice as double,",
+                        "          Size as string,",
+                        "          Weight as double,",
+                        "          Category as string,",
+                        "          Model as string,",
+                        "          Description as string,",
+                        "          ID as short",
+                        "     ),",
+                        "     useSchema: false,",
+                        "     allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     ignoreNoFilesFound: false,",
+                        "     format: 'delimited',",
+                        "     fileSystem: 'silver',",
+                        "     fileName: 'DimProduct',",
+                        "     columnDelimiter: ',',",
+                        "     escapeChar: '\\\\',",
+                        "     quoteChar: '\\\"',",
+                        "     columnNamesAsHeader: true) ~> dimProduct",
+                        "source(output(",
+                        "          SalesOrderID as integer,",
+                        "          SalesOrderDetailID as integer,",
+                        "          OrderQty as short,",
+                        "          ProductID as short,",
+                        "          UnitPrice as double,",
+                        "          UnitPriceDiscount as double,",
+                        "          LineTotal as double,",
+                        "          Status as short,",
+                        "          AccountNumber as string,",
+                        "          CustomerID as short,",
+                        "          ShipMethod as string,",
+                        "          SubTotal as double,",
+                        "          TaxAmt as double,",
+                        "          Freight as double,",
+                        "          TotalDue as double,",
+                        "          orderID as short",
+                        "     ),",
+                        "     useSchema: false,",
+                        "     allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     ignoreNoFilesFound: false,",
+                        "     format: 'delimited',",
+                        "     fileSystem: 'silver',",
+                        "     fileName: 'DimOrder',",
+                        "     columnDelimiter: ',',",
+                        "     escapeChar: '\\\\',",
+                        "     quoteChar: '\\\"',",
+                        "     columnNamesAsHeader: true) ~> dimOrder",
+                        "source(output(",
+                        "          CustomerID as short,",
+                        "          FirstName as string,",
+                        "          MiddleName as string,",
+                        "          LastName as string,",
+                        "          CompanyName as string,",
+                        "          EmailAddress as string,",
+                        "          Phone as string",
+                        "     ),",
+                        "     useSchema: false,",
+                        "     allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     ignoreNoFilesFound: false,",
+                        "     format: 'delimited',",
+                        "     fileSystem: 'silver',",
+                        "     fileName: 'DimCustomer',",
+                        "     columnDelimiter: ',',",
+                        "     escapeChar: '\\\\',",
+                        "     quoteChar: '\\\"',",
+                        "     columnNamesAsHeader: true) ~> dimCustomer",
+                        "source(output(",
+                        "          CustomerID as short,",
+                        "          AddressID as short",
+                        "     ),",
+                        "     useSchema: false,",
+                        "     allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     ignoreNoFilesFound: false,",
+                        "     format: 'delimited',",
+                        "     fileSystem: 'silver',",
+                        "     fileName: 'CustomerAddress',",
+                        "     columnDelimiter: ',',",
+                        "     escapeChar: '\\\\',",
+                        "     quoteChar: '\\\"',",
+                        "     columnNamesAsHeader: true) ~> dimAddress",
+                        "dimOrder, dimProduct join(dimOrder@ProductID == dimProduct@ProductID,",
+                        "     joinType:'inner',",
+                        "     matchType:'exact',",
+                        "     ignoreSpaces: false,",
+                        "     broadcast: 'auto')~> joinOrderProduct",
+                        "joinOrderProduct, joinAddressCustomer join(dimOrder@CustomerID == dimCustomer@CustomerID,",
+                        "     joinType:'inner',",
+                        "     matchType:'exact',",
+                        "     ignoreSpaces: false,",
+                        "     broadcast: 'auto')~> joinFinal",
+                        "dimCustomer, dimAddress join(dimCustomer@CustomerID == dimAddress@CustomerID,",
+                        "     joinType:'inner',",
+                        "     matchType:'exact',",
+                        "     ignoreSpaces: false,",
+                        "     broadcast: 'auto')~> joinAddressCustomer",
+                        "joinFinal select(mapColumn(",
+                        "          CustomerID = dimOrder@CustomerID,",
+                        "          orderID,",
+                        "          ProductID = ID,",
+                        "          AddressID",
+                        "     ),",
+                        "     skipDuplicateMapInputs: true,",
+                        "     skipDuplicateMapOutputs: true) ~> selectFinal",
+                        "selectFinal sink(allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     format: 'delimited',",
+                        "     fileSystem: 'silver',",
+                        "     columnDelimiter: ',',",
+                        "     escapeChar: '\\\\',",
+                        "     quoteChar: '\\\"',",
+                        "     columnNamesAsHeader: true,",
+                        "     partitionFileNames:['FactSales'],",
+                        "     umask: 0022,",
+                        "     preCommands: [],",
+                        "     postCommands: [],",
+                        "     skipDuplicateMapInputs: true,",
+                        "     skipDuplicateMapOutputs: true,",
+                        "     saveOrder: 1,",
+                        "     partitionBy('hash', 1)) ~> FactSales"
+                    ]
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/linkedserviceadls')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/DatawarehouseDim')]",
+            "type": "Microsoft.DataFactory/factories/dataflows",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "type": "MappingDataFlow",
+                "typeProperties": {
+                    "sources": [
+                        {
+                            "linkedService": {
+                                "referenceName": "linkedserviceadls",
+                                "type": "LinkedServiceReference"
+                            },
+                            "name": "Customer"
+                        },
+                        {
+                            "linkedService": {
+                                "referenceName": "linkedserviceadls",
+                                "type": "LinkedServiceReference"
+                            },
+                            "name": "Product"
+                        },
+                        {
+                            "linkedService": {
+                                "referenceName": "linkedserviceadls",
+                                "type": "LinkedServiceReference"
+                            },
+                            "name": "Address"
+                        },
+                        {
+                            "linkedService": {
+                                "referenceName": "linkedserviceadls",
+                                "type": "LinkedServiceReference"
+                            },
+                            "name": "Order"
+                        }
+                    ],
+                    "sinks": [
+                        {
+                            "linkedService": {
+                                "referenceName": "AzureSqlDatabase1",
+                                "type": "LinkedServiceReference"
+                            },
+                            "name": "dbCustomer"
+                        },
+                        {
+                            "linkedService": {
+                                "referenceName": "AzureSqlDatabase1",
+                                "type": "LinkedServiceReference"
+                            },
+                            "name": "dbProduct"
+                        },
+                        {
+                            "linkedService": {
+                                "referenceName": "AzureSqlDatabase1",
+                                "type": "LinkedServiceReference"
+                            },
+                            "name": "dbAddress"
+                        },
+                        {
+                            "linkedService": {
+                                "referenceName": "AzureSqlDatabase1",
+                                "type": "LinkedServiceReference"
+                            },
+                            "name": "dbOrder"
+                        }
+                    ],
+                    "transformations": [],
+                    "scriptLines": [
+                        "source(output(",
+                        "          CustomerID as short,",
+                        "          FirstName as string,",
+                        "          MiddleName as string,",
+                        "          LastName as string,",
+                        "          CompanyName as string,",
+                        "          EmailAddress as string,",
+                        "          Phone as string",
+                        "     ),",
+                        "     useSchema: false,",
+                        "     allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     ignoreNoFilesFound: false,",
+                        "     format: 'delimited',",
+                        "     fileSystem: 'silver',",
+                        "     fileName: 'DimCustomer',",
+                        "     columnDelimiter: ',',",
+                        "     escapeChar: '\\\\',",
+                        "     quoteChar: '\\\"',",
+                        "     columnNamesAsHeader: true) ~> Customer",
+                        "source(output(",
+                        "          ProductID as short,",
+                        "          Name as string,",
+                        "          ProductNumber as string,",
+                        "          Color as string,",
+                        "          StandardCost as double,",
+                        "          ListPrice as double,",
+                        "          Size as string,",
+                        "          Weight as double,",
+                        "          Category as string,",
+                        "          Model as string,",
+                        "          Description as string,",
+                        "          ID as short",
+                        "     ),",
+                        "     useSchema: false,",
+                        "     allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     ignoreNoFilesFound: false,",
+                        "     format: 'delimited',",
+                        "     fileSystem: 'silver',",
+                        "     fileName: 'DimProduct',",
+                        "     columnDelimiter: ',',",
+                        "     escapeChar: '\\\\',",
+                        "     quoteChar: '\\\"',",
+                        "     columnNamesAsHeader: true) ~> Product",
+                        "source(output(",
+                        "          AddressID as short,",
+                        "          AddressLine1 as string,",
+                        "          AddressLine2 as string,",
+                        "          City as string,",
+                        "          StateProvince as string,",
+                        "          CountryRegion as string,",
+                        "          PostalCode as string",
+                        "     ),",
+                        "     useSchema: false,",
+                        "     allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     ignoreNoFilesFound: false,",
+                        "     format: 'delimited',",
+                        "     fileSystem: 'silver',",
+                        "     fileName: 'DimAddress',",
+                        "     columnDelimiter: ',',",
+                        "     escapeChar: '\\\\',",
+                        "     quoteChar: '\\\"',",
+                        "     columnNamesAsHeader: true) ~> Address",
+                        "source(output(",
+                        "          SalesOrderID as integer,",
+                        "          SalesOrderDetailID as integer,",
+                        "          OrderQty as short,",
+                        "          ProductID as short,",
+                        "          UnitPrice as double,",
+                        "          UnitPriceDiscount as double,",
+                        "          LineTotal as double,",
+                        "          Status as short,",
+                        "          AccountNumber as string,",
+                        "          CustomerID as short,",
+                        "          ShipMethod as string,",
+                        "          SubTotal as double,",
+                        "          TaxAmt as double,",
+                        "          Freight as double,",
+                        "          TotalDue as double",
+                        "     ),",
+                        "     useSchema: false,",
+                        "     allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     ignoreNoFilesFound: false,",
+                        "     format: 'delimited',",
+                        "     fileSystem: 'silver',",
+                        "     fileName: 'DimOrder',",
+                        "     columnDelimiter: ',',",
+                        "     escapeChar: '\\\\',",
+                        "     quoteChar: '\\\"',",
+                        "     columnNamesAsHeader: true) ~> Order",
+                        "Customer sink(allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     format: 'table',",
+                        "     store: 'sqlserver',",
+                        "     schemaName: 'dbo',",
+                        "     tableName: 'dimCustomer',",
+                        "     insertable: true,",
+                        "     updateable: false,",
+                        "     deletable: false,",
+                        "     upsertable: false,",
+                        "     skipDuplicateMapInputs: true,",
+                        "     skipDuplicateMapOutputs: true,",
+                        "     errorHandlingOption: 'stopOnFirstError',",
+                        "     mapColumn(",
+                        "          CustomerID,",
+                        "          FirstName,",
+                        "          MiddleName,",
+                        "          LastName,",
+                        "          CompanyName,",
+                        "          EmailAddress,",
+                        "          Phone",
+                        "     )) ~> dbCustomer",
+                        "Product sink(allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     format: 'table',",
+                        "     store: 'sqlserver',",
+                        "     schemaName: 'dbo',",
+                        "     tableName: 'dimProduct',",
+                        "     insertable: true,",
+                        "     updateable: false,",
+                        "     deletable: false,",
+                        "     upsertable: false,",
+                        "     skipDuplicateMapInputs: true,",
+                        "     skipDuplicateMapOutputs: true,",
+                        "     errorHandlingOption: 'stopOnFirstError',",
+                        "     mapColumn(",
+                        "          ProductID,",
+                        "          Name,",
+                        "          ProductNumber,",
+                        "          Color,",
+                        "          StandardCost,",
+                        "          ListPrice,",
+                        "          Size,",
+                        "          Weight,",
+                        "          Category,",
+                        "          Model,",
+                        "          Description,",
+                        "          ID",
+                        "     )) ~> dbProduct",
+                        "Address sink(allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     format: 'table',",
+                        "     store: 'sqlserver',",
+                        "     schemaName: 'dbo',",
+                        "     tableName: 'dimAddress',",
+                        "     insertable: true,",
+                        "     updateable: false,",
+                        "     deletable: false,",
+                        "     upsertable: false,",
+                        "     skipDuplicateMapInputs: true,",
+                        "     skipDuplicateMapOutputs: true,",
+                        "     errorHandlingOption: 'stopOnFirstError') ~> dbAddress",
+                        "Order sink(allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     format: 'table',",
+                        "     store: 'sqlserver',",
+                        "     schemaName: 'dbo',",
+                        "     tableName: 'dimOrder',",
+                        "     insertable: true,",
+                        "     updateable: false,",
+                        "     deletable: false,",
+                        "     upsertable: false,",
+                        "     skipDuplicateMapInputs: true,",
+                        "     skipDuplicateMapOutputs: true,",
+                        "     errorHandlingOption: 'stopOnFirstError') ~> dbOrder"
+                    ]
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/linkedserviceadls')]",
+                "[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/dataflow1')]",
+            "type": "Microsoft.DataFactory/factories/dataflows",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "type": "MappingDataFlow",
+                "typeProperties": {
+                    "sources": [
+                        {
+                            "linkedService": {
+                                "referenceName": "linkedserviceadls",
+                                "type": "LinkedServiceReference"
+                            },
+                            "name": "source1"
+                        }
+                    ],
+                    "sinks": [
+                        {
+                            "linkedService": {
+                                "referenceName": "AzureSqlDatabase1",
+                                "type": "LinkedServiceReference"
+                            },
+                            "name": "sink1"
+                        }
+                    ],
+                    "transformations": [],
+                    "scriptLines": [
+                        "source(output(",
+                        "          CustomerID as short,",
+                        "          orderID as short,",
+                        "          ProductID as short,",
+                        "          AddressID as short",
+                        "     ),",
+                        "     useSchema: false,",
+                        "     allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     ignoreNoFilesFound: false,",
+                        "     format: 'delimited',",
+                        "     fileSystem: 'silver',",
+                        "     fileName: 'FactSales',",
+                        "     columnDelimiter: ',',",
+                        "     escapeChar: '\\\\',",
+                        "     quoteChar: '\\\"',",
+                        "     columnNamesAsHeader: true) ~> source1",
+                        "source1 sink(allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     format: 'table',",
+                        "     store: 'sqlserver',",
+                        "     schemaName: 'dbo',",
+                        "     tableName: 'FactSales',",
+                        "     insertable: true,",
+                        "     updateable: false,",
+                        "     deletable: false,",
+                        "     upsertable: false,",
+                        "     skipDuplicateMapInputs: true,",
+                        "     skipDuplicateMapOutputs: true,",
+                        "     errorHandlingOption: 'stopOnFirstError',",
+                        "     mapColumn(",
+                        "          CustomerID,",
+                        "          OrderID = orderID,",
+                        "          ProductID,",
+                        "          AddressID",
+                        "     )) ~> sink1"
+                    ]
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/linkedserviceadls')]",
+                "[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
+            ]
+        }
+    ]
+}
