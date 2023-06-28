@@ -1,0 +1,1010 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vulnerabilityAssessments_Default_storageContainerPath": {
+            "type": "SecureString"
+        },
+        "servers_seminarioll_name": {
+            "defaultValue": "seminarioll",
+            "type": "String"
+        },
+        "vaults_seminariollkv_name": {
+            "defaultValue": "seminariollkv",
+            "type": "String"
+        },
+        "workspaces_seminariolldbs_name": {
+            "defaultValue": "seminariolldbs",
+            "type": "String"
+        },
+        "storageAccounts_seminariolladls_name": {
+            "defaultValue": "seminariolladls",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Databricks/workspaces",
+            "apiVersion": "2023-02-01",
+            "name": "[parameters('workspaces_seminariolldbs_name')]",
+            "location": "eastus2",
+            "tags": {
+                "Proposito": "Proyecto Universidad"
+            },
+            "sku": {
+                "name": "trial"
+            },
+            "properties": {
+                "managedResourceGroupId": "[concat('/subscriptions/44ada56d-1cef-4a6b-9002-b406f5acdb64/resourceGroups/databricks-rg-', parameters('workspaces_seminariolldbs_name'), '-y5rnlbluukyjo')]",
+                "parameters": {
+                    "enableNoPublicIp": {
+                        "type": "Bool",
+                        "value": false
+                    },
+                    "natGatewayName": {
+                        "type": "String",
+                        "value": "nat-gateway"
+                    },
+                    "prepareEncryption": {
+                        "type": "Bool",
+                        "value": false
+                    },
+                    "publicIpName": {
+                        "type": "String",
+                        "value": "nat-gw-public-ip"
+                    },
+                    "requireInfrastructureEncryption": {
+                        "type": "Bool",
+                        "value": false
+                    },
+                    "storageAccountName": {
+                        "type": "String",
+                        "value": "dbstoragen3bluhu3t4uoc"
+                    },
+                    "storageAccountSkuName": {
+                        "type": "String",
+                        "value": "Standard_GRS"
+                    },
+                    "vnetAddressPrefix": {
+                        "type": "String",
+                        "value": "10.139"
+                    }
+                },
+                "authorizations": [
+                    {
+                        "principalId": "9a74af6f-d153-4348-988a-e2672920bee9",
+                        "roleDefinitionId": "8e3af657-a8ff-443c-a75c-2fe8c4bcb635"
+                    }
+                ],
+                "createdBy": {},
+                "updatedBy": {},
+                "createdDateTime": "2023-06-05T00:36:19.5696243Z"
+            }
+        },
+        {
+            "type": "Microsoft.KeyVault/vaults",
+            "apiVersion": "2023-02-01",
+            "name": "[parameters('vaults_seminariollkv_name')]",
+            "location": "eastus",
+            "properties": {
+                "sku": {
+                    "family": "A",
+                    "name": "standard"
+                },
+                "tenantId": "8d23cdbf-39ba-4cb2-94bd-6bcb32071619",
+                "accessPolicies": [
+                    {
+                        "tenantId": "8d23cdbf-39ba-4cb2-94bd-6bcb32071619",
+                        "objectId": "d6d21f5d-36ce-45ea-aa5d-a2519179fa83",
+                        "permissions": {
+                            "secrets": [
+                                "get",
+                                "list"
+                            ]
+                        }
+                    }
+                ],
+                "enabledForDeployment": false,
+                "enabledForDiskEncryption": false,
+                "enabledForTemplateDeployment": false,
+                "enableSoftDelete": true,
+                "softDeleteRetentionInDays": 90,
+                "enableRbacAuthorization": true,
+                "vaultUri": "[concat('https://', parameters('vaults_seminariollkv_name'), '.vault.azure.net/')]",
+                "provisioningState": "Succeeded",
+                "publicNetworkAccess": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[parameters('servers_seminarioll_name')]",
+            "location": "eastus2",
+            "tags": {
+                "Proposito": "Proyecto Universidad"
+            },
+            "kind": "v12.0",
+            "properties": {
+                "administratorLogin": "sqladmin",
+                "version": "12.0",
+                "minimalTlsVersion": "1.2",
+                "publicNetworkAccess": "Enabled",
+                "administrators": {
+                    "administratorType": "ActiveDirectory",
+                    "principalType": "User",
+                    "login": "riverosfn@o365.unlar.edu.ar",
+                    "sid": "e6f9e07f-90b9-403c-95bc-a47efbd021cc",
+                    "tenantId": "8d23cdbf-39ba-4cb2-94bd-6bcb32071619",
+                    "azureADOnlyAuthentication": false
+                },
+                "restrictOutboundNetworkAccess": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2022-09-01",
+            "name": "[parameters('storageAccounts_seminariolladls_name')]",
+            "location": "eastus2",
+            "tags": {
+                "Proposito": "Proyecto Universidad"
+            },
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "kind": "StorageV2",
+            "properties": {
+                "dnsEndpointType": "Standard",
+                "defaultToOAuthAuthentication": false,
+                "publicNetworkAccess": "Enabled",
+                "allowCrossTenantReplication": false,
+                "isSftpEnabled": false,
+                "minimumTlsVersion": "TLS1_2",
+                "allowBlobPublicAccess": true,
+                "allowSharedKeyAccess": true,
+                "isHnsEnabled": true,
+                "networkAcls": {
+                    "bypass": "AzureServices",
+                    "virtualNetworkRules": [],
+                    "ipRules": [],
+                    "defaultAction": "Allow"
+                },
+                "supportsHttpsTrafficOnly": true,
+                "encryption": {
+                    "requireInfrastructureEncryption": false,
+                    "services": {
+                        "file": {
+                            "keyType": "Account",
+                            "enabled": true
+                        },
+                        "blob": {
+                            "keyType": "Account",
+                            "enabled": true
+                        }
+                    },
+                    "keySource": "Microsoft.Storage"
+                },
+                "accessTier": "Hot"
+            }
+        },
+        {
+            "type": "Microsoft.KeyVault/vaults/secrets",
+            "apiVersion": "2023-02-01",
+            "name": "[concat(parameters('vaults_seminariollkv_name'), '/appclient')]",
+            "location": "eastus",
+            "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', parameters('vaults_seminariollkv_name'))]"
+            ],
+            "properties": {
+                "attributes": {
+                    "enabled": true
+                }
+            }
+        },
+        {
+            "type": "Microsoft.KeyVault/vaults/secrets",
+            "apiVersion": "2023-02-01",
+            "name": "[concat(parameters('vaults_seminariollkv_name'), '/appsecret')]",
+            "location": "eastus",
+            "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', parameters('vaults_seminariollkv_name'))]"
+            ],
+            "properties": {
+                "attributes": {
+                    "enabled": true
+                }
+            }
+        },
+        {
+            "type": "Microsoft.KeyVault/vaults/secrets",
+            "apiVersion": "2023-02-01",
+            "name": "[concat(parameters('vaults_seminariollkv_name'), '/apptenant')]",
+            "location": "eastus",
+            "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', parameters('vaults_seminariollkv_name'))]"
+            ],
+            "properties": {
+                "attributes": {
+                    "enabled": true
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/administrators",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/ActiveDirectory')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "administratorType": "ActiveDirectory",
+                "login": "riverosfn@o365.unlar.edu.ar",
+                "sid": "e6f9e07f-90b9-403c-95bc-a47efbd021cc",
+                "tenantId": "8d23cdbf-39ba-4cb2-94bd-6bcb32071619"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/advancedThreatProtectionSettings",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "state": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/advisors",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/CreateIndex')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "autoExecuteValue": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/advisors",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/DbParameterization')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "autoExecuteValue": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/advisors",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/DefragmentIndex')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "autoExecuteValue": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/advisors",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/DropIndex')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "autoExecuteValue": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/advisors",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/ForceLastGoodPlan')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "autoExecuteValue": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/auditingPolicies",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/Default')]",
+            "location": "East US 2",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "auditingState": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/auditingSettings",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "retentionDays": 0,
+                "auditActionsAndGroups": [],
+                "isStorageSecondaryKeyInUse": false,
+                "isAzureMonitorTargetEnabled": false,
+                "isManagedIdentityInUse": false,
+                "state": "Disabled",
+                "storageAccountSubscriptionId": "00000000-0000-0000-0000-000000000000"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/azureADOnlyAuthentications",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "azureADOnlyAuthentication": false
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/connectionPolicies",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/default')]",
+            "location": "eastus2",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "connectionType": "Default"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/', parameters('servers_seminarioll_name'), 'db_staging')]",
+            "location": "eastus2",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "tags": {
+                "Proposito": "Proyecto Universidad"
+            },
+            "sku": {
+                "name": "Basic",
+                "tier": "Basic",
+                "capacity": 5
+            },
+            "kind": "v12.0,user",
+            "properties": {
+                "collation": "SQL_Latin1_General_CP1_CI_AS",
+                "maxSizeBytes": 2147483648,
+                "catalogCollation": "SQL_Latin1_General_CP1_CI_AS",
+                "zoneRedundant": false,
+                "readScale": "Disabled",
+                "requestedBackupStorageRedundancy": "Local",
+                "maintenanceConfigurationId": "/subscriptions/44ada56d-1cef-4a6b-9002-b406f5acdb64/providers/Microsoft.Maintenance/publicMaintenanceConfigurations/SQL_Default",
+                "isLedgerOn": false,
+                "availabilityZone": "NoPreference"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/advancedThreatProtectionSettings",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/master/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "state": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/auditingPolicies",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/master/Default')]",
+            "location": "East US 2",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "auditingState": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/auditingSettings",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/master/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "retentionDays": 0,
+                "isAzureMonitorTargetEnabled": false,
+                "state": "Disabled",
+                "storageAccountSubscriptionId": "00000000-0000-0000-0000-000000000000"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/extendedAuditingSettings",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/master/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "retentionDays": 0,
+                "isAzureMonitorTargetEnabled": false,
+                "state": "Disabled",
+                "storageAccountSubscriptionId": "00000000-0000-0000-0000-000000000000"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/geoBackupPolicies",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/master/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "state": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/ledgerDigestUploads",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/master/Current')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {}
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/securityAlertPolicies",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/master/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "state": "Disabled",
+                "disabledAlerts": [
+                    ""
+                ],
+                "emailAddresses": [
+                    ""
+                ],
+                "emailAccountAdmins": false,
+                "retentionDays": 0
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/transparentDataEncryption",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/master/Current')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "state": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/vulnerabilityAssessments",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/master/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "recurringScans": {
+                    "isEnabled": false,
+                    "emailSubscriptionAdmins": true,
+                    "emails": []
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/devOpsAuditingSettings",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "isAzureMonitorTargetEnabled": false,
+                "isManagedIdentityInUse": false,
+                "state": "Disabled",
+                "storageAccountSubscriptionId": "00000000-0000-0000-0000-000000000000"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/encryptionProtector",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/current')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "kind": "servicemanaged",
+            "properties": {
+                "serverKeyName": "ServiceManaged",
+                "serverKeyType": "ServiceManaged",
+                "autoRotationEnabled": false
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/extendedAuditingSettings",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "retentionDays": 0,
+                "auditActionsAndGroups": [],
+                "isStorageSecondaryKeyInUse": false,
+                "isAzureMonitorTargetEnabled": false,
+                "isManagedIdentityInUse": false,
+                "state": "Disabled",
+                "storageAccountSubscriptionId": "00000000-0000-0000-0000-000000000000"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/firewallRules",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/AllowAllWindowsAzureIps')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Sql/servers/firewallRules",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/query-editor-350fc0')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Sql/servers/firewallRules",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/query-editor-3d156d')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Sql/servers/firewallRules",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/query-editor-4d83e0')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Sql/servers/firewallRules",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/query-editor-5b9aca')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Sql/servers/keys",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/ServiceManaged')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "kind": "servicemanaged",
+            "properties": {
+                "serverKeyType": "ServiceManaged"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/securityAlertPolicies",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "state": "Enabled",
+                "disabledAlerts": [
+                    ""
+                ],
+                "emailAddresses": [
+                    ""
+                ],
+                "emailAccountAdmins": false,
+                "retentionDays": 0
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/sqlVulnerabilityAssessments",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "state": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/vulnerabilityAssessments",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "recurringScans": {
+                    "isEnabled": false,
+                    "emailSubscriptionAdmins": true
+                },
+                "storageContainerPath": "[parameters('vulnerabilityAssessments_Default_storageContainerPath')]"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices",
+            "apiVersion": "2022-09-01",
+            "name": "[concat(parameters('storageAccounts_seminariolladls_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_seminariolladls_name'))]"
+            ],
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "properties": {
+                "containerDeleteRetentionPolicy": {
+                    "enabled": true,
+                    "days": 7
+                },
+                "cors": {
+                    "corsRules": []
+                },
+                "deleteRetentionPolicy": {
+                    "allowPermanentDelete": false,
+                    "enabled": true,
+                    "days": 7
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/fileServices",
+            "apiVersion": "2022-09-01",
+            "name": "[concat(parameters('storageAccounts_seminariolladls_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_seminariolladls_name'))]"
+            ],
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "properties": {
+                "protocolSettings": {
+                    "smb": {}
+                },
+                "cors": {
+                    "corsRules": []
+                },
+                "shareDeleteRetentionPolicy": {
+                    "enabled": true,
+                    "days": 7
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/queueServices",
+            "apiVersion": "2022-09-01",
+            "name": "[concat(parameters('storageAccounts_seminariolladls_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_seminariolladls_name'))]"
+            ],
+            "properties": {
+                "cors": {
+                    "corsRules": []
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices",
+            "apiVersion": "2022-09-01",
+            "name": "[concat(parameters('storageAccounts_seminariolladls_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_seminariolladls_name'))]"
+            ],
+            "properties": {
+                "cors": {
+                    "corsRules": []
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/advancedThreatProtectionSettings",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/', parameters('servers_seminarioll_name'), 'db_staging/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_seminarioll_name'), concat(parameters('servers_seminarioll_name'), 'db_staging'))]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "state": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/advisors",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/', parameters('servers_seminarioll_name'), 'db_staging/CreateIndex')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_seminarioll_name'), concat(parameters('servers_seminarioll_name'), 'db_staging'))]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "autoExecuteValue": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/advisors",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/', parameters('servers_seminarioll_name'), 'db_staging/DbParameterization')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_seminarioll_name'), concat(parameters('servers_seminarioll_name'), 'db_staging'))]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "autoExecuteValue": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/advisors",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/', parameters('servers_seminarioll_name'), 'db_staging/DefragmentIndex')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_seminarioll_name'), concat(parameters('servers_seminarioll_name'), 'db_staging'))]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "autoExecuteValue": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/advisors",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/', parameters('servers_seminarioll_name'), 'db_staging/DropIndex')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_seminarioll_name'), concat(parameters('servers_seminarioll_name'), 'db_staging'))]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "autoExecuteValue": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/advisors",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/', parameters('servers_seminarioll_name'), 'db_staging/ForceLastGoodPlan')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_seminarioll_name'), concat(parameters('servers_seminarioll_name'), 'db_staging'))]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "autoExecuteValue": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/auditingPolicies",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/', parameters('servers_seminarioll_name'), 'db_staging/Default')]",
+            "location": "East US 2",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_seminarioll_name'), concat(parameters('servers_seminarioll_name'), 'db_staging'))]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "auditingState": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/auditingSettings",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/', parameters('servers_seminarioll_name'), 'db_staging/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_seminarioll_name'), concat(parameters('servers_seminarioll_name'), 'db_staging'))]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "retentionDays": 0,
+                "isAzureMonitorTargetEnabled": false,
+                "state": "Disabled",
+                "storageAccountSubscriptionId": "00000000-0000-0000-0000-000000000000"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/backupLongTermRetentionPolicies",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/', parameters('servers_seminarioll_name'), 'db_staging/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_seminarioll_name'), concat(parameters('servers_seminarioll_name'), 'db_staging'))]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "weeklyRetention": "PT0S",
+                "monthlyRetention": "PT0S",
+                "yearlyRetention": "PT0S",
+                "weekOfYear": 0
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/backupShortTermRetentionPolicies",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/', parameters('servers_seminarioll_name'), 'db_staging/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_seminarioll_name'), concat(parameters('servers_seminarioll_name'), 'db_staging'))]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "retentionDays": 7,
+                "diffBackupIntervalInHours": 24
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/extendedAuditingSettings",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/', parameters('servers_seminarioll_name'), 'db_staging/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_seminarioll_name'), concat(parameters('servers_seminarioll_name'), 'db_staging'))]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "retentionDays": 0,
+                "isAzureMonitorTargetEnabled": false,
+                "state": "Disabled",
+                "storageAccountSubscriptionId": "00000000-0000-0000-0000-000000000000"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/geoBackupPolicies",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/', parameters('servers_seminarioll_name'), 'db_staging/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_seminarioll_name'), concat(parameters('servers_seminarioll_name'), 'db_staging'))]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "state": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/ledgerDigestUploads",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/', parameters('servers_seminarioll_name'), 'db_staging/Current')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_seminarioll_name'), concat(parameters('servers_seminarioll_name'), 'db_staging'))]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {}
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/securityAlertPolicies",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/', parameters('servers_seminarioll_name'), 'db_staging/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_seminarioll_name'), concat(parameters('servers_seminarioll_name'), 'db_staging'))]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "state": "Disabled",
+                "disabledAlerts": [
+                    ""
+                ],
+                "emailAddresses": [
+                    ""
+                ],
+                "emailAccountAdmins": false,
+                "retentionDays": 0
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/transparentDataEncryption",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/', parameters('servers_seminarioll_name'), 'db_staging/Current')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_seminarioll_name'), concat(parameters('servers_seminarioll_name'), 'db_staging'))]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "state": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/vulnerabilityAssessments",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_seminarioll_name'), '/', parameters('servers_seminarioll_name'), 'db_staging/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_seminarioll_name'), concat(parameters('servers_seminarioll_name'), 'db_staging'))]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_seminarioll_name'))]"
+            ],
+            "properties": {
+                "recurringScans": {
+                    "isEnabled": false,
+                    "emailSubscriptionAdmins": true,
+                    "emails": []
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+            "apiVersion": "2022-09-01",
+            "name": "[concat(parameters('storageAccounts_seminariolladls_name'), '/default/backup')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccounts_seminariolladls_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_seminariolladls_name'))]"
+            ],
+            "properties": {
+                "immutableStorageWithVersioning": {
+                    "enabled": false
+                },
+                "defaultEncryptionScope": "$account-encryption-key",
+                "denyEncryptionScopeOverride": false,
+                "publicAccess": "None"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+            "apiVersion": "2022-09-01",
+            "name": "[concat(parameters('storageAccounts_seminariolladls_name'), '/default/bronze')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccounts_seminariolladls_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_seminariolladls_name'))]"
+            ],
+            "properties": {
+                "immutableStorageWithVersioning": {
+                    "enabled": false
+                },
+                "defaultEncryptionScope": "$account-encryption-key",
+                "denyEncryptionScopeOverride": false,
+                "publicAccess": "None"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+            "apiVersion": "2022-09-01",
+            "name": "[concat(parameters('storageAccounts_seminariolladls_name'), '/default/prueba')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccounts_seminariolladls_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_seminariolladls_name'))]"
+            ],
+            "properties": {
+                "immutableStorageWithVersioning": {
+                    "enabled": false
+                },
+                "defaultEncryptionScope": "$account-encryption-key",
+                "denyEncryptionScopeOverride": false,
+                "publicAccess": "None"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+            "apiVersion": "2022-09-01",
+            "name": "[concat(parameters('storageAccounts_seminariolladls_name'), '/default/silver')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccounts_seminariolladls_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_seminariolladls_name'))]"
+            ],
+            "properties": {
+                "immutableStorageWithVersioning": {
+                    "enabled": false
+                },
+                "defaultEncryptionScope": "$account-encryption-key",
+                "denyEncryptionScopeOverride": false,
+                "publicAccess": "None"
+            }
+        }
+    ]
+}
